@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="Exercício 17.css">
+</head>
+<body>
+    <div class="atividade-container">
+        <h1>Atividade 17: Integração entre Front-end e Back-end</h1>
+        <hr>
+
+        <div class="questao">
+            <h3>Exercício 1: Cadastrar Usuário (POST)</h3>
+            <input type="text" id="nomeUsuario" placeholder="Nome do usuário">
+            <button id="btnUsuario">Cadastrar Usuário</button>
+            <p id="resUsuario"></p>
+        </div>
+        <hr>
+
+        <div class="questao">
+            <h3>Exercício 2: Criar Tarefa (POST)</h3>
+            <input type="text" id="tituloTarefa" placeholder="Nome da tarefa">
+            <button id="btnTarefa">Criar Tarefa</button>
+            <p id="resTarefa"></p>
+        </div>
+        <hr>
+
+        <div class="questao">
+            <h3>Exercício 3: Listar Avisos do Servidor (GET)</h3>
+            <button id="btnListar">Buscar Avisos</button>
+            <ul id="listaAvisos"></ul>
+        </div>
+        <hr>
+
+        <div class="questao">
+            <h3>Exercício 4 e 5: Integração Completa com Formulário</h3>
+            <form id="formAvisoCompleto">
+                <input type="text" id="avisoCompleto" placeholder="Digite um aviso escolar" required>
+                <button type="submit">Enviar Aviso</button>
+            </form>
+            <p id="resCompleto"></p>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:3000';
+
+        document.querySelector('#btnUsuario').addEventListener('click', async () => {
+            const nome = document.querySelector('#nomeUsuario').value;
+            const respostaTxt = document.querySelector('#resUsuario');
+            
+            try {
+                const resposta = await fetch(`${BASE_URL}/usuarios`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome: nome })
+                });
+                const dados = await resposta.json();
+                respostaTxt.textContent = dados.mensagem;
+            } catch (erro) {
+                respostaTxt.textContent = 'Erro: Não foi possível conectar ao servidor (Exercício 4).';
+            }
+        });
+
+        document.querySelector('#btnTarefa').addEventListener('click', async () => {
+            const tarefa = document.querySelector('#tituloTarefa').value;
+            const respostaTxt = document.querySelector('#resTarefa');
+            
+            try {
+                const resposta = await fetch(`${BASE_URL}/tarefas`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titulo: tarefa })
+                });
+                const dados = await resposta.json();
+                respostaTxt.textContent = dados.mensagem;
+            } catch (erro) {
+                respostaTxt.textContent = 'Erro: Servidor offline (Exercício 4).';
+            }
+        });
+
+        document.querySelector('#btnListar').addEventListener('click', async () => {
+            const lista = document.querySelector('#listaAvisos');
+            lista.innerHTML = ''; 
+            
+            try {
+                const resposta = await fetch(`${BASE_URL}/avisos`); 
+                const avisos = await resposta.json();
+                
+                avisos.forEach(aviso => {
+                    const li = document.createElement('li');
+                    li.textContent = aviso.titulo;
+                    lista.appendChild(li);
+                });
+            } catch (erro) {
+                const liErro = document.createElement('li');
+                liErro.textContent = 'Erro ao buscar dados do servidor.';
+                lista.appendChild(liErro);
+            }
+        });
+
+        document.querySelector('#formAvisoCompleto').addEventListener('submit', async (evento) => {
+            evento.preventDefault(); 
+            
+            const avisoInput = document.querySelector('#avisoCompleto');
+            const respostaTxt = document.querySelector('#resCompleto');
+            
+            try {
+                const resposta = await fetch(`${BASE_URL}/avisos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titulo: avisoInput.value })
+                });
+                const dados = await resposta.json();
+                respostaTxt.textContent = `Sucesso: ${dados.mensagem}`;
+                avisoInput.value = ''; 
+            } catch (erro) {
+                respostaTxt.textContent = 'Erro crítico: Servidor inacessível.';
+            }
+        });
+    </script>
+</body>
+</html>

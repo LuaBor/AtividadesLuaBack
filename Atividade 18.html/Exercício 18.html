@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="Exercício 18.css">
+</head>
+<body>
+    <div class="atividade-container">
+        <h1>Atividade 18: Autenticação e Login</h1>
+        <hr>
+
+        <div class="questao">
+            <h3>Exercício 1 e 3: Login no Sistema (POST /login)</h3>
+            <input type="email" id="email" placeholder="E-mail">
+            <input type="password" id="senha" placeholder="Senha">
+            <button id="entrar">Entrar</button>
+            <p id="resultadoLogin"></p>
+        </div>
+        <hr>
+
+        <div class="questao">
+            <h3>Exercício 2 e 4: Rota Protegida com Middleware (/tarefas)</h3>
+            <button id="btnTarefas">Buscar Minhas Tarefas</button>
+            <ul id="listaTarefas"></ul>
+            <p id="resultadoTarefas"></p>
+        </div>
+        <hr>
+
+        <div class="questao">
+            <h3>Exercício 5: Sair do Sistema (POST /logout)</h3>
+            <button id="btnLogout">Fazer Logout</button>
+            <p id="resultadoLogout"></p>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:3000';
+
+        document.querySelector('#entrar').addEventListener('click', async () => {
+            const email = document.querySelector('#email').value;
+            const senha = document.querySelector('#senha').value;
+            const resultado = document.querySelector('#resultadoLogin');
+
+            try {
+                const resposta = await fetch(`${BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+                const dados = await resposta.json();
+
+                if (!resposta.ok) {
+                    resultado.textContent = dados.mensagem;
+                    resultado.style.color = 'red';
+                    return;
+                }
+
+                localStorage.setItem('token', dados.token);
+                resultado.textContent = `Sucesso! Logado como: ${dados.perfil}`;
+                resultado.style.color = 'green';
+            } catch (erro) {
+                resultado.textContent = 'Erro ao conectar com o servidor.';
+                resultado.style.color = 'red';
+            }
+        });
+
+        document.querySelector('#btnTarefas').addEventListener('click', async () => {
+            const lista = document.querySelector('#listaTarefas');
+            const resultado = document.querySelector('#resultadoTarefas');
+            const token = localStorage.getItem('token'); 
+
+            lista.innerHTML = '';
+            resultado.textContent = '';
+
+            try {
+                const resposta = await fetch(`${BASE_URL}/tarefas`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': token 
+                    }
+                });
+                const dados = await resposta.json();
+
+                if (!resposta.ok) {
+                    resultado.textContent = dados.mensagem;
+                    resultado.style.color = 'red';
+                    return;
+                }
+
+                dados.forEach(tarefa => {
+                    const li = document.createElement('li');
+                    li.textContent = tarefa.titulo;
+                    lista.appendChild(li);
+                });
+            } catch (erro) {
+                resultado.textContent = 'Erro de conexão ou token ausente.';
+                resultado.style.color = 'red';
+            }
+        });
+
+        document.querySelector('#btnLogout').addEventListener('click', async () => {
+            const resultado = document.querySelector('#resultadoLogout');
+            const token = localStorage.getItem('token');
+
+            try {
+                const resposta = await fetch(`${BASE_URL}/logout`, {
+                    method: 'POST',
+                    headers: { 'Authorization': token }
+                });
+                const dados = await resposta.json();
+
+                localStorage.removeItem('token');
+                resultado.textContent = dados.mensagem;
+                resultado.style.color = 'orange';
+            } catch (erro) {
+                localStorage.removeItem('token');
+                resultado.textContent = 'Desconectado localmente (servidor offline).';
+            }    
+        });
+    </script>
+</body>
+</html>
